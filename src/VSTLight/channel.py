@@ -5,7 +5,7 @@ class Channel:
 
     def __init__(self):
         """
-        Initialize the channel with a default PMW value of 0
+        Initialize the channel with a default value of 0
         """
 
         self.intensity = 0
@@ -13,7 +13,7 @@ class Channel:
 
     def set(self, value: int):
         """
-        Set the intensity of the channel. Only 8 bit values are allowed (0-255) and 
+        Set the intensity of the channel. Only 8 bit values are allowed (0-255) and
         the set function will return an error if the value is outside this range.
 
         Args:
