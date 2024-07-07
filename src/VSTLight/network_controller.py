@@ -35,16 +35,14 @@ class NetworkController:
     def __init__(self, channels: int, ip: str = "192.168.11.20") -> None:
         """
         Initialize the NetworkController object and connect to the controller itself.
-        Init will throw ValueErrors if the IP address is invalid or the specified
+        Init will throw `ValueErrors` if the IP address is invalid or the specified
         number of channels is not supported by the controller. If the controller
-        is unreachable a ConnectionError will be thrown.
+        is unreachable a `ConnectionError` will be thrown.
 
         Args:
         -----
-            channels (int): The number of channels the controller should have.
-                            Must be between 2 and 4.
-            ip (str): The IP address of the controller. Defaults to the native
-                      IP address of the VLP controllers.
+            channels (int): The number of channels the controller should have. Must be between 2 and 4.
+            ip (str): The IP address of the controller. Defaults to the native IP address of the VLP controllers.
         """
         # Validate arguments
         if not validate_ip_format(ip):
@@ -61,7 +59,7 @@ class NetworkController:
         self.__channels = [Channel() for _ in range(channels)]
         self.__port = 1000
         self.__sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.__sock.settimeout(1)
+        self.__sock.settimeout(10)
 
         # Connect to the controller
         try:
@@ -77,6 +75,68 @@ class NetworkController:
             self.__send_command(f"{i:02}F000")
             self.__send_command(f"{i:02}L000")
             # TODO: Verify the response from the controller is OK
+
+    def set_value(self, channel_id: int, value: int) -> None:
+        """
+        Set the intensity of a channel on the controller.
+
+        Args:
+        -----
+            channel (int): The channel to set the intensity of. Must be between 0 and the number of channels - 1.
+            value (int): The intensity to set the channel to. Must be between 0 and 255.
+        """
+        # Validate arguments
+        self.__verify_channel_id(channel_id)
+
+        if not 0 <= value <= 255:
+            raise ValueError("Channel intensity must be between 0 and 255")
+
+        # Update the stored channel intensity and send the command
+        self.__channels[channel_id].set(value)
+        self.__send_command(f"{channel_id:02}L{value:03}")
+
+    def set_on(self, channel_id: int) -> None:
+        """
+        Set the state of a channel on the controller.
+
+        Args:
+        -----
+            channel (int): The channel to set the state of. Must be between 0 and the number of channels - 1.
+        """
+        # Validate arguments
+        self.__verify_channel_id(channel_id)
+
+        # Update the stored channel state and send the command
+        self.__channels[channel_id].on = True
+        self.__send_command(f"{channel_id:02}L001")
+
+    def set_off(self, channel_id: int) -> None:
+        """
+        Set the state of a channel on the controller.
+
+        Args:
+        -----
+            channel (int): The channel to set the state of. Must be between 0 and the number of channels - 1.
+        """
+        # Validate arguments
+        self.__verify_channel_id(channel_id)
+
+        # Update the stored channel state and send the command
+        self.__channels[channel_id].on = False
+        self.__send_command(f"{channel_id:02}L000")
+
+    def __verify_channel_id(self, channel_id: int) -> None:
+        """
+        Verify that a channel ID is valid. Throws a ValueError if the channel ID if not.
+
+        Args:
+        -----
+            channel_id (int): The channel ID to verify.
+        """
+        if not 0 <= channel_id < len(self.__channels):
+            raise ValueError(
+                f"Channel ID must be between 0 and {len(self.__channels) - 1}"
+            )
 
     def __send_command(self, command: str) -> str:
         """
@@ -100,43 +160,3 @@ class NetworkController:
 
         self.__sock.sendall(command.encode(encoding="ascii"))
         return self.__sock.recv(16).decode(encoding="ascii")
-
-    def set_value(self, channel_id: int, value: int) -> None:
-        """
-        Set the intensity of a channel on the controller.
-
-        Args:
-        -----
-            channel (int): The channel to set the intensity of. Must be between 0 and the number of channels - 1.
-            value (int): The intensity to set the channel to. Must be between 0 and 255.
-        """
-        # Validate arguments
-        if not 0 <= channel_id < (len(self.__channels) - 1):
-            raise ValueError(
-                f"Channel ID must be between 0 and {len(self.__channels) - 1}"
-            )
-
-        if not 0 <= value <= 255:
-            raise ValueError("Channel intensity must be between 0 and 255")
-
-        # Update the stored channel intensity and send the command
-        self.__channels[channel_id].set(value)
-        self.__send_command(f"{channel_id:02}L{value:03}")
-    
-    def set_on(self, channel_id: int) -> None:
-        """
-        Set the state of a channel on the controller.
-
-        Args:
-        -----
-            channel (int): The channel to set the state of. Must be between 0 and the number of channels - 1.
-        """
-        # Validate arguments
-        if not 0 <= channel_id < (len(self.__channels) - 1):
-            raise ValueError(
-                f"Channel ID must be between 0 and {len(self.__channels) - 1}"
-            )
-
-        # Update the stored channel state and send the command
-        self.__channels[channel_id].on = True
-        self.__send_command(f"{channel_id:02}L001")
