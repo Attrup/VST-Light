@@ -98,6 +98,26 @@ class NetworkController:
         if self.__channels[channel_idx].state:
             self.__send_command(f"{channel_idx:02}F{value:03}")
 
+    def get_intensity(self, channel_id: int) -> int:
+        """
+        Get the current intensity of a channel.
+
+        Args:
+        -----
+            channel (int): The channel to get the intensity of. Corresponds to the channel number on the controller [1-4].
+
+        Returns:
+        --------
+            int: The current intensity of the channel.
+        """
+        # Validate arguments
+        self.__verify_channel_id(channel_id)
+
+        # Convert channel ID to index
+        channel_idx = channel_id - 1
+
+        return self.__channels[channel_idx].intensity
+
     def set_on(self, channel_id: int) -> None:
         """
         Set the state of a channel on the controller.
@@ -137,6 +157,58 @@ class NetworkController:
         # Update the stored channel state and send the command
         self.__channels[channel_idx].off()
         self.__send_command(f"{channel_idx:02}F000")
+
+    def toggle(self, channel_id: int) -> None:
+        """
+        Toggle the state of a channel on the controller between on and off (Inverting current state).
+
+        Args:
+        -----
+            channel (int): The channel to toggle. Corresponds to the channel number on the controller [1-4].
+        """
+        # Validate arguments
+        self.__verify_channel_id(channel_id)
+
+        # Convert channel ID to index
+        channel_idx = channel_id - 1
+
+        # Toggle the state of the channel
+        if self.__channels[channel_idx].state:
+            self.set_off(channel_id)
+        else:
+            self.set_on(channel_id)
+
+    def set_all_intensities(self, value: int) -> None:
+        """
+        Set the intensity of all channels to the same value.
+
+        Args:
+        -----
+            value (int): The intensity to set all channels to. Only 8 bit values are accepted [0-255].
+        """
+        for i in range(len(self.__channels)):
+            self.set_intensity(i + 1, value)
+
+    def set_all_on(self) -> None:
+        """
+        Set all channels to the on state.
+        """
+        for i in range(len(self.__channels)):
+            self.set_on(i + 1)
+
+    def set_all_off(self) -> None:
+        """
+        Set all channels to the off state.
+        """
+        for i in range(len(self.__channels)):
+            self.set_off(i + 1)
+
+    def toggle_all(self) -> None:
+        """
+        Toggle the state of all channels on the controller between on and off (Inverting current state).
+        """
+        for i in range(len(self.__channels)):
+            self.toggle(i + 1)
 
     def __verify_channel_id(self, channel_id: int) -> None:
         """

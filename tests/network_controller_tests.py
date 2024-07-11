@@ -190,3 +190,11 @@ class TestNetworkControllerFunctions(unittest.TestCase):
         cmd = self.mock_conn.recv(1024).decode(encoding="ascii")
 
         self.assertEqual(cmd[1:7], "03F000")
+
+    def test_return_intensity(self):
+        """
+        Test that the get_intensity method returns the correct intensity of a channel
+        """
+        self.controller.set_intensity(1, 200)
+
+        self.assertEqual(self.controller.get_intensity(1), 200)
