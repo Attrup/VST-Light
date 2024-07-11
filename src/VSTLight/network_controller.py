@@ -132,15 +132,13 @@ class NetworkController:
 
     def __send_command(self, command: str) -> None:
         """
-        Send a command to the controller and return the response.
+        Send a command to the controller in the VLP IP protocol format. This is achieved by adding
+        a header (@), checksum, and a delimiter (<CR><LF>) to the command passed to the function, 
+        before encoding it to ascii bytes and sending it to the controller.
 
         Args:
         -----
             command (str): The command to send to the controller.
-
-        Returns:
-        --------
-            str: The response from the controller.
         """
 
         # Add header (@) and calculate checksum according to the VLP IP protocol

@@ -5,13 +5,13 @@ class Channel:
 
     def __init__(self) -> None:
         """
-        Initialize the channel with a default value of 0
+        Initialize the channel object with a default value of 0 and off state.
         """
 
-        self.intensity = 0
-        self.on = False
+        self.__intensity = 0
+        self.__on = False
 
-    def set(self, value: int) -> None:
+    def set_intensity(self, value: int) -> None:
         """
         Set the intensity of the channel. Only 8 bit values are allowed (0-255) and
         the set function will return an error if the value is outside this range.
