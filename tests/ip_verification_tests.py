@@ -1,7 +1,5 @@
 import unittest
-
-# Import functions to test
-from VSTLight.network_controller import validate_ip_format
+from src.VSTLight.network_controller import validate_ip_format
 
 
 class TestIPFormat(unittest.TestCase):
@@ -25,7 +23,7 @@ class TestIPFormat(unittest.TestCase):
         """
         ip = "10.0.0.11"
         self.assertTrue(validate_ip_format(ip))
-    
+
     def test_valid_ip3(self):
         """
         Test that a valid IP is accepted

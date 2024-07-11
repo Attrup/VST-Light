@@ -3,7 +3,7 @@ class Channel:
     Class representing a single output channel of the VLP light controller.
     """
 
-    def __init__(self):
+    def __init__(self) -> None:
         """
         Initialize the channel with a default value of 0
         """
@@ -11,7 +11,7 @@ class Channel:
         self.intensity = 0
         self.on = False
 
-    def set(self, value: int):
+    def set(self, value: int) -> None:
         """
         Set the intensity of the channel. Only 8 bit values are allowed (0-255) and
         the set function will return an error if the value is outside this range.
