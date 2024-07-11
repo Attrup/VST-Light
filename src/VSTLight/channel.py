@@ -6,8 +6,8 @@ class ChannelState(Enum):
     Enum representing the possible states of a channel.
     """
 
-    OFF = False
     ON = True
+    OFF = False
 
 
 class Channel:
