@@ -1,5 +1,6 @@
 import unittest
-from src.VSTLight.network_controller import validate_ip_format
+import time
+from src.VSTLight.network_controller import validate_ip_format, compare_and_wait
 
 
 class TestIPFormat(unittest.TestCase):
@@ -58,3 +59,25 @@ class TestIPFormat(unittest.TestCase):
         """
         ip = "0.255.0.0.1"
         self.assertFalse(validate_ip_format(ip))
+
+
+class TestCompareAndWait(unittest.TestCase):
+    def test_waiting_time(self):
+        """
+        Test that the compare_and_wait function waits for at least the specified time
+        """
+        last_cmd_time = time.monotonic()
+        wait_time = 0.005
+        compare_and_wait(last_cmd_time, wait_time)
+
+        self.assertGreaterEqual(time.monotonic() - last_cmd_time, wait_time)
+
+    def test_no_waiting_time(self):
+        """
+        Test that the compare_and_wait function does not wait if the specified time has already passed
+        """
+        last_cmd_time = time.monotonic()
+        wait_time = 0.005
+        compare_and_wait(0, wait_time)
+
+        self.assertLessEqual(time.monotonic() - last_cmd_time, wait_time)

@@ -1,6 +1,11 @@
 import socket
+import time
 from .channel import Channel
-from .utils import validate_ip_format
+from .utils import validate_ip_format, compare_and_wait
+
+# Waiting time between commands in seconds (5ms) to avoid overloading the controller.
+# Dictated by the VLP controller specsheet
+WAIT_TIME = 0.005
 
 
 class NetworkController:
@@ -23,18 +28,22 @@ class NetworkController:
         object, function calls will be blocking for up to 5 seconds, before raising a
         `ConnectionError`.
 
+        The physical VLP light controller has a limit to the number of commands it can
+        process continously. To avoid overloading the controller, commands are limited
+        to one every 5ms. If a command is sent before this time has passed, the call will
+        block until the time has passed.
 
         Args:
         -----
             channels (int): The number of channels the controller object should have. Must be between 1 and 4.
             ip (str): The IP address of the controller. Defaults to the native IP address of the VLP controllers.
-            port (int): The port of the controller. Hard coded to 1000 in the VLP controllers.
+            port (int): The port of the controller [0-65535]. Hard coded to 1000 in the VLP controllers.
         """
         # Validate arguments
         if not validate_ip_format(ip):
             raise ValueError(f"Invalid IP address: {ip}")
 
-        if not 0 <= port and isinstance(port, int):
+        if not 0 <= port <= 65535:
             raise ValueError(f"Invalid port: {port} - Must be a positive integer")
 
         if channels not in [1, 2, 3, 4]:
@@ -49,6 +58,7 @@ class NetworkController:
         self.__port = port
         self.__sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__sock.settimeout(5)
+        self.__last_cmd_time = 0.0
 
         # Connect to the controller
         try:
@@ -221,7 +231,7 @@ class NetworkController:
         if not 1 <= channel_id <= len(self.__channels):
             raise ValueError(f"Channel ID must be between 1 and {len(self.__channels)}")
 
-    def __send_command(self, command: str) -> None:
+    def __send_command(self, cmd: str) -> None:
         """
         Send a command to the controller in the VLP IP protocol format. This is achieved by adding
         a header (@), checksum, and a delimiter (<CR><LF>) to the command passed to the function,
@@ -229,14 +239,18 @@ class NetworkController:
 
         Args:
         -----
-            command (str): The command to send to the controller.
+            cmd (str): The command to send to the controller.
         """
 
         # Add header (@) and calculate checksum according to the VLP IP protocol
-        command = f"@{command}"
-        checksum = sum(ord(char) for char in command) % 256
+        cmd = f"@{cmd}"
+        checksum = sum(ord(char) for char in cmd) % 256
 
         # Add lowest byte of checksum and delimiter (<CR><LF>) to command
-        command += f"{checksum:02X}\r\n"
+        cmd += f"{checksum:02X}\r\n"
 
-        self.__sock.send(command.encode(encoding="ascii"))
+        # Check that controller is ready to receive a new command and send when ready
+        compare_and_wait(self.__last_cmd_time, WAIT_TIME)
+        self.__last_cmd_time = time.monotonic()
+
+        self.__sock.send(cmd.encode(encoding="ascii"))
