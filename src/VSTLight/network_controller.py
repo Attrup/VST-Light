@@ -63,7 +63,7 @@ class NetworkController:
         Args:
         -----
             channel (int): The channel to set the intensity of. Corresponds to the channel number on the controller [1-4].
-            value (int): The intensity to update the channel with. Must be between 0 and 255.
+            value (int): The intensity to update the channel with. Only 8 bit values are accepted [0-255].
         """
         # Validate arguments
         self.__verify_channel_id(channel_id)
@@ -75,10 +75,10 @@ class NetworkController:
         channel_idx = channel_id - 1
 
         # Update the stored channel intensity and send the command
-        self.__channels[channel_idx].set(value)
+        self.__channels[channel_idx].intensity = value
 
         # Update the value on the controller if the channel is on
-        if self.__channels[channel_idx].on:
+        if self.__channels[channel_idx].state:
             self.__send_command(f"{channel_idx:02}F{value:03}")
 
     def set_on(self, channel_id: int) -> None:
@@ -96,7 +96,7 @@ class NetworkController:
         channel_idx = channel_id - 1
 
         # Update the stored channel state and send the command
-        self.__channels[channel_idx].on = True
+        self.__channels[channel_idx].on()
         self.__send_command(
             f"{channel_idx:02}F{self.__channels[channel_idx].intensity:03}"
         )
@@ -116,7 +116,7 @@ class NetworkController:
         channel_idx = channel_id - 1
 
         # Update the stored channel state and send the command
-        self.__channels[channel_idx].on = False
+        self.__channels[channel_idx].off()
         self.__send_command(f"{channel_idx:02}F000")
 
     def __verify_channel_id(self, channel_id: int) -> None:
@@ -133,7 +133,7 @@ class NetworkController:
     def __send_command(self, command: str) -> None:
         """
         Send a command to the controller in the VLP IP protocol format. This is achieved by adding
-        a header (@), checksum, and a delimiter (<CR><LF>) to the command passed to the function, 
+        a header (@), checksum, and a delimiter (<CR><LF>) to the command passed to the function,
         before encoding it to ascii bytes and sending it to the controller.
 
         Args:
