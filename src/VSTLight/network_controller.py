@@ -10,7 +10,9 @@ class NetworkController:
     from the unit.
     """
 
-    def __init__(self, channels: int, ip: str = "192.168.11.20") -> None:
+    def __init__(
+        self, channels: int, ip: str = "192.168.11.20", port: int = 1000
+    ) -> None:
         """
         Initialize the NetworkController object and connect to the controller itself.
         Init will throw `ValueErrors` if the IP address is invalid or the specified
@@ -21,14 +23,19 @@ class NetworkController:
         object, function calls will be blocking for up to 5 seconds, before raising a
         `ConnectionError`.
 
+
         Args:
         -----
             channels (int): The number of channels the controller object should have. Must be between 1 and 4.
             ip (str): The IP address of the controller. Defaults to the native IP address of the VLP controllers.
+            port (int): The port of the controller. Hard coded to 1000 in the VLP controllers.
         """
         # Validate arguments
         if not validate_ip_format(ip):
             raise ValueError(f"Invalid IP address: {ip}")
+
+        if not 0 <= port and isinstance(port, int):
+            raise ValueError(f"Invalid port: {port} - Must be a positive integer")
 
         if channels not in [1, 2, 3, 4]:
             raise ValueError(
@@ -39,7 +46,7 @@ class NetworkController:
         # Set internal variables and create socket
         self.__ip = ip
         self.__channels = [Channel() for _ in range(channels)]
-        self.__port = 1000
+        self.__port = port
         self.__sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
         self.__sock.settimeout(5)
 
@@ -54,6 +61,16 @@ class NetworkController:
         # Initialize all controller channels to intensity 0 (off)
         for i in range(channels):
             self.__send_command(f"{i:02}F000")
+
+    def destroy(self) -> None:
+        """
+        Destroys the NetworkController object. All channels are set to off and the connection to the controller is closed.
+        """
+        for i in range(len(self.__channels)):
+            self.set_off(i + 1)
+
+        self.__sock.close()
+        del self
 
     def set_intensity(self, channel_id: int, value: int) -> None:
         """
@@ -95,11 +112,13 @@ class NetworkController:
         # Convert channel ID to index
         channel_idx = channel_id - 1
 
-        # Update the stored channel state and send the command
+        # Update the stored channel state and send the command if the intensity is greater than 0
         self.__channels[channel_idx].on()
-        self.__send_command(
-            f"{channel_idx:02}F{self.__channels[channel_idx].intensity:03}"
-        )
+
+        if self.__channels[channel_idx].intensity > 0:
+            self.__send_command(
+                f"{channel_idx:02}F{self.__channels[channel_idx].intensity:03}"
+            )
 
     def set_off(self, channel_id: int) -> None:
         """
@@ -143,7 +162,7 @@ class NetworkController:
 
         # Add header (@) and calculate checksum according to the VLP IP protocol
         command = f"@{command}"
-        checksum = sum(ord(char) for char in command) % 0xFF
+        checksum = sum(ord(char) for char in command) % 256
 
         # Add lowest byte of checksum and delimiter (<CR><LF>) to command
         command += f"{checksum:02X}\r\n"
