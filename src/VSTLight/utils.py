@@ -17,5 +17,5 @@ def validate_ip_format(ip: str) -> bool:
     return (
         ip.count(".") == 3
         and all(0 < len(val) <= 3 for val in ip.split("."))
-        and all(0 <= int(val) < 256 for val in ip.split("."))
+        and all(0 <= int(val) <= 255 for val in ip.split("."))
     )

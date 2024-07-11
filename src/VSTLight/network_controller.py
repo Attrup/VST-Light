@@ -17,18 +17,22 @@ class NetworkController:
         number of channels is not supported by the controller. If the controller
         is unreachable a `ConnectionError` will be thrown.
 
+        If the light controller is unreachable at any point during the lifetime of the
+        object, function calls will be blocking for up to 5 seconds, before raising a
+        `ConnectionError`.
+
         Args:
         -----
-            channels (int): The number of channels the controller should have. Must be between 2 and 4.
+            channels (int): The number of channels the controller object should have. Must be between 1 and 4.
             ip (str): The IP address of the controller. Defaults to the native IP address of the VLP controllers.
         """
         # Validate arguments
         if not validate_ip_format(ip):
             raise ValueError(f"Invalid IP address: {ip}")
 
-        if channels not in [2, 3, 4]:
+        if channels not in [1, 2, 3, 4]:
             raise ValueError(
-                f"Invalid number of channels: {channels}. Must be between 2 and 4."
+                f"Invalid number of channels: {channels} - Must be between 1 and 4"
             )
 
         # Validate number of channels
@@ -37,7 +41,7 @@ class NetworkController:
         self.__channels = [Channel() for _ in range(channels)]
         self.__port = 1000
         self.__sock = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        self.__sock.settimeout(10)
+        self.__sock.settimeout(5)
 
         # Connect to the controller
         try:
@@ -47,21 +51,19 @@ class NetworkController:
                 f"Failed to connect to controller with ip: {ip}"
             ) from e
 
-        # Initialize all controller channels to 0 and verify that
-        # the controller has the expected number of channels
+        # Initialize all controller channels to intensity 0 (off)
         for i in range(channels):
             self.__send_command(f"{i:02}F000")
-            self.__send_command(f"{i:02}L000")
-            # TODO: Verify the response from the controller is OK
 
-    def set_value(self, channel_id: int, value: int) -> None:
+    def set_intensity(self, channel_id: int, value: int) -> None:
         """
-        Set the intensity of a channel on the controller.
+        Set the light intensity of a channel. If the channel is off, the intensity will be set locally but not transmitted
+        to the controller. If the channel is on, the intensity will additionally be transmitted to the controller.
 
         Args:
         -----
-            channel (int): The channel to set the intensity of. Must be between 0 and the number of channels - 1.
-            value (int): The intensity to set the channel to. Must be between 0 and 255.
+            channel (int): The channel to set the intensity of. Corresponds to the channel number on the controller [1-4].
+            value (int): The intensity to update the channel with. Must be between 0 and 255.
         """
         # Validate arguments
         self.__verify_channel_id(channel_id)
@@ -69,9 +71,15 @@ class NetworkController:
         if not 0 <= value <= 255:
             raise ValueError("Channel intensity must be between 0 and 255")
 
+        # Convert channel ID to index
+        channel_idx = channel_id - 1
+
         # Update the stored channel intensity and send the command
-        self.__channels[channel_id].set(value)
-        self.__send_command(f"{channel_id:02}L{value:03}")
+        self.__channels[channel_idx].set(value)
+
+        # Update the value on the controller if the channel is on
+        if self.__channels[channel_idx].on:
+            self.__send_command(f"{channel_idx:02}F{value:03}")
 
     def set_on(self, channel_id: int) -> None:
         """
@@ -79,14 +87,19 @@ class NetworkController:
 
         Args:
         -----
-            channel (int): The channel to set the state of. Must be between 0 and the number of channels - 1.
+            channel (int): The channel to turn on. Corresponds to the channel number on the controller [1-4].
         """
         # Validate arguments
         self.__verify_channel_id(channel_id)
 
+        # Convert channel ID to index
+        channel_idx = channel_id - 1
+
         # Update the stored channel state and send the command
-        self.__channels[channel_id].on = True
-        self.__send_command(f"{channel_id:02}L001")
+        self.__channels[channel_idx].on = True
+        self.__send_command(
+            f"{channel_idx:02}F{self.__channels[channel_idx].intensity:03}"
+        )
 
     def set_off(self, channel_id: int) -> None:
         """
@@ -94,14 +107,17 @@ class NetworkController:
 
         Args:
         -----
-            channel (int): The channel to set the state of. Must be between 0 and the number of channels - 1.
+            channel (int): The channel to turn off. Corresponds to the channel number on the controller [1-4].
         """
         # Validate arguments
         self.__verify_channel_id(channel_id)
 
+        # Convert channel ID to index
+        channel_idx = channel_id - 1
+
         # Update the stored channel state and send the command
-        self.__channels[channel_id].on = False
-        self.__send_command(f"{channel_id:02}L000")
+        self.__channels[channel_idx].on = False
+        self.__send_command(f"{channel_idx:02}F000")
 
     def __verify_channel_id(self, channel_id: int) -> None:
         """
@@ -111,12 +127,10 @@ class NetworkController:
         -----
             channel_id (int): The channel ID to verify.
         """
-        if not 0 <= channel_id < len(self.__channels):
-            raise ValueError(
-                f"Channel ID must be between 0 and {len(self.__channels) - 1}"
-            )
+        if not 1 <= channel_id <= len(self.__channels):
+            raise ValueError(f"Channel ID must be between 1 and {len(self.__channels)}")
 
-    def __send_command(self, command: str) -> str:
+    def __send_command(self, command: str) -> None:
         """
         Send a command to the controller and return the response.
 
@@ -129,12 +143,11 @@ class NetworkController:
             str: The response from the controller.
         """
 
-        # Add header (@) and calculate checksum
+        # Add header (@) and calculate checksum according to the VLP IP protocol
         command = f"@{command}"
-        checksum = sum(ord(char) for char in command) % 256
+        checksum = sum(ord(char) for char in command) % 0xFF
 
         # Add lowest byte of checksum and delimiter (<CR><LF>) to command
         command += f"{checksum:02X}\r\n"
 
-        self.__sock.sendall(command.encode(encoding="ascii"))
-        return self.__sock.recv(16).decode(encoding="ascii")
+        self.__sock.send(command.encode(encoding="ascii"))

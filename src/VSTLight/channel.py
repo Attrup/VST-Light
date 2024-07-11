@@ -20,7 +20,7 @@ class Channel:
         -----
             value (int): The value to set the channel to.
         """
-        if not 0 < value < 255:
+        if not 0 <= value <= 255:
             raise ValueError("Channel intensity must be between 0 and 255")
 
         self.intensity = value
