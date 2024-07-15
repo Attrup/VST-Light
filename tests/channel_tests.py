@@ -49,7 +49,7 @@ class TestIPFormat(unittest.TestCase):
         """
         with self.assertRaises(ValueError):
             self.channel.intensity = -4
-    
+
     def test_set_strobe_mode(self):
         """
         Test that the strobe mode can be correctly updated
@@ -65,7 +65,7 @@ class TestIPFormat(unittest.TestCase):
         """
         with self.assertRaises(ValueError):
             self.channel.strobe_mode = 0
-    
+
     def test_set_strobe_mode_high(self):
         """
         Test that setting the strobe mode to an invalid value (too high) raises a ValueError
