@@ -34,6 +34,5 @@ def compare_and_wait(last_cmd_time: float, wait_time: float) -> None:
         last_cmd_time (int): The time the last command was sent.
         wait_time (int) [s]: The minimum time to wait before returning (in seconds).
     """
-    print(f"last_cmd_time: {last_cmd_time}")
     if time.monotonic() - last_cmd_time < wait_time:
         time.sleep(wait_time - (time.monotonic() - last_cmd_time))

@@ -7,7 +7,8 @@ from src.VSTLight.network_controller import NetworkController
 
 # Define the localhost and port for the dummy light controller
 HOST = "127.0.0.1"
-PORT = 6070
+PORT_A = 6070
+PORT_B = 6080
 
 # Define the wait time for the socket to receive data
 WAIT_TIME = 0.0001
@@ -25,7 +26,7 @@ class TestNetworkControllerInitialization(unittest.TestCase):
         - Listens for incoming connections allowing a NetworkController to connect
         """
         cls.mock_controller = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        cls.mock_controller.bind((HOST, PORT))
+        cls.mock_controller.bind((HOST, PORT_A))
         cls.mock_controller.listen()
 
     @classmethod
@@ -51,7 +52,7 @@ class TestNetworkControllerInitialization(unittest.TestCase):
         """
         Test that the NetworkController object can be initialized with good arguments
         """
-        self.controller = NetworkController(4, HOST, PORT)
+        self.controller = NetworkController(4, HOST, PORT_A)
         self.assertIsInstance(self.controller, NetworkController)
 
     def test_network_controller_initialization_with_bad_channels(self):
@@ -59,7 +60,7 @@ class TestNetworkControllerInitialization(unittest.TestCase):
         Test that the NetworkController object cannot be initialized with a bad number of channels
         """
         with self.assertRaises(ValueError):
-            self.controller = NetworkController(5, HOST, PORT)
+            self.controller = NetworkController(5, HOST, PORT_A)
 
     def test_network_controller_initialization_with_bad_port(self):
         """
@@ -72,7 +73,7 @@ class TestNetworkControllerInitialization(unittest.TestCase):
         """
         Test that the NetworkController object can be destroyed
         """
-        self.controller = NetworkController(4, HOST, PORT)
+        self.controller = NetworkController(4, HOST, PORT_A)
         self.controller.destroy()
         self.assertNotIn("controller", locals())
 
@@ -92,10 +93,10 @@ class TestNetworkControllerFunctions(unittest.TestCase):
         - Clears input buffer of the mock connection
         """
         cls.mock_controller = socket.socket(socket.AF_INET, socket.SOCK_STREAM)
-        cls.mock_controller.bind((HOST, PORT))
+        cls.mock_controller.bind((HOST, PORT_B))
         cls.mock_controller.listen()
 
-        cls.controller = NetworkController(4, HOST, PORT)
+        cls.controller = NetworkController(4, HOST, PORT_B)
 
         cls.mock_conn, _ = cls.mock_controller.accept()
 

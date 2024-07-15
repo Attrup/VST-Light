@@ -65,7 +65,7 @@ class NetworkController:
             self.__sock.connect((self.__ip, self.__port))
         except Exception as e:
             raise ConnectionError(
-                f"Failed to connect to controller with ip: {ip}"
+                f"Failed to connect to controller with IP: {ip}"
             ) from e
 
         # Initialize all controller channels to intensity 0 (off)
