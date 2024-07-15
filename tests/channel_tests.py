@@ -10,10 +10,11 @@ class TestIPFormat(unittest.TestCase):
 
     def test_default_state(self):
         """
-        Test that the default state of the channel is off and intensity is 0
+        Test that the default state of the channel is off, intensity is 0 and strobe mode is 1
 
         """
         self.assertEqual(self.channel.intensity, 0)
+        self.assertEqual(self.channel.strobe_mode, 1)
         self.assertFalse(self.channel.state)
 
     def test_set_intensity(self):
@@ -48,6 +49,30 @@ class TestIPFormat(unittest.TestCase):
         """
         with self.assertRaises(ValueError):
             self.channel.intensity = -4
+    
+    def test_set_strobe_mode(self):
+        """
+        Test that the strobe mode can be correctly updated
+
+        """
+        self.channel.strobe_mode = 8
+        self.assertEqual(self.channel.strobe_mode, 8)
+
+    def test_set_strobe_mode_low(self):
+        """
+        Test that setting the strobe mode to an invalid value (too low) raises a ValueError
+
+        """
+        with self.assertRaises(ValueError):
+            self.channel.strobe_mode = 0
+    
+    def test_set_strobe_mode_high(self):
+        """
+        Test that setting the strobe mode to an invalid value (too high) raises a ValueError
+
+        """
+        with self.assertRaises(ValueError):
+            self.channel.strobe_mode = 19
 
     def test_turn_on(self):
         """

@@ -210,7 +210,7 @@ class NetworkController:
         Args:
         -----
             channel_id (int): The channel to set the strobe mode of. Corresponds to the channel number on the controller [1-4].
-            mode (int): The integer specifying the strobe mode [1-10]. Refer to list above, leading zeros are not required.
+            mode (int): The strobe mode to set [1-10]. Refer to list above, leading zeros are not required.
         """
         # Validate arguments
         self.__verify_channel_id(channel_id)
@@ -221,6 +221,34 @@ class NetworkController:
         # Update the stored channel strobe mode and send the command
         self.__channels[channel_idx].strobe_mode = mode
         self.__send_command(f"{channel_idx:02}S{mode:02}")
+
+    def get_strobe_mode(self, channel_id: int) -> int:
+        """
+        Get the strobe mode of a channel on the controller.
+
+        Strobe modes:
+        - `01` = 40 us
+        - `02` = 80 us
+        - `03` = 120 us
+        - `04` = 200 us
+        - `05` = 600 us
+        - `06` = 1.2 ms
+        - `07` = 4 ms
+        - `08` = 10 ms
+        - `09` = 20 ms
+        - `10` = 40 ms
+
+        Returns:
+        --------
+            int: Strobe mode of the specified channel
+        """
+        # Validate arguments
+        self.__verify_channel_id(channel_id)
+
+        # Convert channel ID to index
+        channel_idx = channel_id - 1
+
+        return self.__channels[channel_idx].strobe_mode
 
     def set_all_intensities(self, value: int) -> None:
         """
@@ -253,6 +281,31 @@ class NetworkController:
         """
         for i in range(len(self.__channels)):
             self.toggle(i + 1)
+
+    def set_all_strobe_modes(self, mode: int) -> None:
+        """
+        Set the strobe mode of all channels on the controller. The following strobe modes are available,
+        where the time specifies the 'on' time of the channel after a trig signal is recieved. Refer to
+        the light controller docutmentation for further information.
+
+        Strobe modes:
+        - `01` = 40 us
+        - `02` = 80 us
+        - `03` = 120 us
+        - `04` = 200 us
+        - `05` = 600 us
+        - `06` = 1.2 ms
+        - `07` = 4 ms
+        - `08` = 10 ms
+        - `09` = 20 ms
+        - `10` = 40 ms
+
+        Args:
+        -----
+            mode (int): The strobe mode to set [1-10]. Refer to list above, leading zeros are not required.
+        """
+        for i in range(len(self.__channels)):
+            self.set_strobe_mode(i + 1, mode)
 
     def __verify_channel_id(self, channel_id: int) -> None:
         """

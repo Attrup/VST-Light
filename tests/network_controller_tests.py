@@ -5,7 +5,8 @@ import time
 
 from src.VSTLight.network_controller import NetworkController
 
-# Define the localhost and port for the dummy light controller
+# Define the localhost and ports for the dummy light controller. Two different ports are used to
+# ensure that the two test classes do not interfere with each other by trying to bind to the same port.
 HOST = "127.0.0.1"
 PORT_A = 6070
 PORT_B = 6080
@@ -199,3 +200,28 @@ class TestNetworkControllerFunctions(unittest.TestCase):
         self.controller.set_intensity(1, 200)
 
         self.assertEqual(self.controller.get_intensity(1), 200)
+
+    def test_set_strobe_mode_local(self):
+        """
+        Test that the set_strobe_mode method changes the local strobe mode of a channel
+        """
+        self.controller.set_strobe_mode(1, 5)
+        self.assertEqual(self.controller._NetworkController__channels[0].strobe_mode, 5)
+
+    def test_set_strobe_mode_remote(self):
+        """
+        Test that the set_strobe_mode method changes the remote strobe mode of a channel
+        """
+        self.controller.set_strobe_mode(2, 5)
+
+        cmd = self.mock_conn.recv(1024).decode(encoding="ascii")
+
+        self.assertEqual(cmd[1:6], "01S05")
+
+    def test_return_strobe_mode(self):
+        """
+        Test that the get_strobe_mode method returns the correct strobe mode of a channel
+        """
+        self.controller.set_strobe_mode(1, 5)
+
+        self.assertEqual(self.controller.get_strobe_mode(1), 5)
