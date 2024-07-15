@@ -10,8 +10,8 @@ def main() -> None:
     lights = NetworkController(4)
 
     # Set strobe modes of two channels
-    lights.set_strobe_mode(2, 4)
-    lights.set_strobe_mode(4, 10)
+    lights.set_strobe_mode(2, 4)   # Set channel 2 to strobe mode 4, i.e. 200 us on time
+    lights.set_strobe_mode(4, 10)  # Set channel 4 to strobe mode 10, i.e. 40 ms on time
 
     # Trig the channels using the trig input of the light controller unit
     # Below is simply a dummy loop to keep the program running.
