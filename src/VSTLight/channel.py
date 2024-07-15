@@ -23,6 +23,7 @@ class Channel:
         """
 
         self._intensity = 0
+        self._strobe_mode = 1
         self._state = ChannelState.OFF
 
     @property
@@ -50,6 +51,33 @@ class Channel:
             raise ValueError("Channel intensity must be between 0 and 255")
 
         self._intensity = value
+
+    @property
+    def strobe_mode(self) -> int:
+        """
+        Get the current strobe mode of the channel
+
+        Returns:
+        --------
+            int: The current strobe mode of the channel
+        """
+        return self._strobe_mode
+
+    @strobe_mode.setter
+    def strobe_mode(self, mode: int) -> None:
+        """
+        Set the strobe mode of the channel
+
+        Args:
+        -----
+            mode (int): The strobe mode to set the channel to. Only values between 1 and 10 are accepted.
+        """
+        if not 0 < mode <= 10:
+            raise ValueError(
+                f"Strobe mode identifyer must be integer between 1 and 10, got: {mode}"
+            )
+
+        self._strobe_mode = mode
 
     @property
     def state(self) -> bool:

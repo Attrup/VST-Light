@@ -70,7 +70,8 @@ class NetworkController:
 
         # Initialize all controller channels to intensity 0 (off)
         for i in range(channels):
-            self.__send_command(f"{i:02}F000")
+            self.set_off(i + 1)
+            self.set_strobe_mode(i + 1, 1)
 
     def destroy(self) -> None:
         """
@@ -89,7 +90,7 @@ class NetworkController:
 
         Args:
         -----
-            channel (int): The channel to set the intensity of. Corresponds to the channel number on the controller [1-4].
+            channel_id (int): The channel to set the intensity of. Corresponds to the channel number on the controller [1-4].
             value (int): The intensity to update the channel with. Only 8 bit values are accepted [0-255].
         """
         # Validate arguments
@@ -114,7 +115,7 @@ class NetworkController:
 
         Args:
         -----
-            channel (int): The channel to get the intensity of. Corresponds to the channel number on the controller [1-4].
+            channel_id (int): The channel to get the intensity of. Corresponds to the channel number on the controller [1-4].
 
         Returns:
         --------
@@ -134,7 +135,7 @@ class NetworkController:
 
         Args:
         -----
-            channel (int): The channel to turn on. Corresponds to the channel number on the controller [1-4].
+            channel_id (int): The channel to turn on. Corresponds to the channel number on the controller [1-4].
         """
         # Validate arguments
         self.__verify_channel_id(channel_id)
@@ -156,7 +157,7 @@ class NetworkController:
 
         Args:
         -----
-            channel (int): The channel to turn off. Corresponds to the channel number on the controller [1-4].
+            channel_id (int): The channel to turn off. Corresponds to the channel number on the controller [1-4].
         """
         # Validate arguments
         self.__verify_channel_id(channel_id)
@@ -174,7 +175,7 @@ class NetworkController:
 
         Args:
         -----
-            channel (int): The channel to toggle. Corresponds to the channel number on the controller [1-4].
+            channel_id (int): The channel to toggle. Corresponds to the channel number on the controller [1-4].
         """
         # Validate arguments
         self.__verify_channel_id(channel_id)
@@ -187,6 +188,39 @@ class NetworkController:
             self.set_off(channel_id)
         else:
             self.set_on(channel_id)
+
+    def set_strobe_mode(self, channel_id: int, mode: int) -> None:
+        """
+        Set the strobe mode of a channel on the controller. The following strobe modes are available,
+        where the time specifies the 'on' time of the channel after a trig signal is recieved. Refer to
+        the light controller docutmentation for further information.
+
+        Strobe modes:
+        - `01` = 40 us
+        - `02` = 80 us
+        - `03` = 120 us
+        - `04` = 200 us
+        - `05` = 600 us
+        - `06` = 1.2 ms
+        - `07` = 4 ms
+        - `08` = 10 ms
+        - `09` = 20 ms
+        - `10` = 40 ms
+
+        Args:
+        -----
+            channel_id (int): The channel to set the strobe mode of. Corresponds to the channel number on the controller [1-4].
+            mode (int): The integer specifying the strobe mode [1-10]. Refer to list above, leading zeros are not required.
+        """
+        # Validate arguments
+        self.__verify_channel_id(channel_id)
+
+        # Convert channel ID to index
+        channel_idx = channel_id - 1
+
+        # Update the stored channel strobe mode and send the command
+        self.__channels[channel_idx].strobe_mode = mode
+        self.__send_command(f"{channel_idx:02}S{mode:02}")
 
     def set_all_intensities(self, value: int) -> None:
         """
