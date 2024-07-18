@@ -1,4 +1,4 @@
-name: Statically Typecheck Code using mypy
+name: Typecheck
 on: push
 jobs:
   TypeCheck:

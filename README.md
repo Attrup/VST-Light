@@ -1,4 +1,9 @@
 # VST-Light
+<p align="center">
+  <img src="https://github.com/Attrup/VST-Light/actions/workflows/package_tests.yaml/badge.svg"> 
+  <img src="https://github.com/Attrup/VST-Light/actions/workflows/static_typecheck.yaml/badge.svg"/> 
+  <img src="https://github.com/Attrup/VST-Light/actions/workflows/formatting.yaml/badge.svg"/> 
+</p>
 *VST-Light* is a Python package designed to facilitate seamless control of network-compatible VLP light controllers from VS Technology. By abstracting the proprietary communication protocols, *VST-Light* provides a straightforward and user-friendly interface, enabling users to easily manage their VLP lighting systems without needing to understand the underlying technical complexities. In order to best utilize the module, it is recommended to read through the [User Guide](#user-guide) before use. Additionally, the [example](#example) of the module in use should also be checked.
 
 ### Compatibility
