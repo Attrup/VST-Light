@@ -1,9 +1,7 @@
 # VST-Light
-<div align="center">
-  <img src="https://github.com/Attrup/VST-Light/actions/workflows/package_tests.yaml/badge.svg"> 
-  <img src="https://github.com/Attrup/VST-Light/actions/workflows/static_typecheck.yaml/badge.svg"/> 
-  <img src="https://github.com/Attrup/VST-Light/actions/workflows/formatting.yaml/badge.svg"/> 
-</div>
+![Tests](https://github.com/Attrup/VST-Light/actions/workflows/package_tests.yaml/badge.svg)
+![Typecheck](https://github.com/Attrup/VST-Light/actions/workflows/static_typecheck.yaml/badge.svg)
+![Formatting](https://github.com/Attrup/VST-Light/actions/workflows/formatting.yaml/badge.svg)
 
 *VST-Light* is a Python package designed to facilitate seamless control of network-compatible VLP light controllers from VS Technology. By abstracting the proprietary communication protocols, *VST-Light* provides a straightforward and user-friendly interface, enabling users to easily manage their VLP lighting systems without needing to understand the underlying technical complexities. In order to best utilize the module, it is recommended to read through the [User Guide](#user-guide) before use. Additionally, the [example](#example) of the module in use should also be checked.
 
@@ -17,9 +15,8 @@ The following light controllers from VS Technology are supported:
 ## Installation
 VST-Light is available on PyPI and can be easily installed using pip:
 ```zsh
-pip install VST-Light
+pip install VSTLight
 ```
-
 ## User Guide
 ### Initialization
 To use the module in your project, simply import the `VSTLight` module into your code and create an instance of the `NetworkController` class, specifying the number of channels available on the connected light controller. If the IP of the light controller has been changed from the default `192.168.11.20`, you will need to specify the new IP address as well.
@@ -46,6 +43,7 @@ Alternatively all channels can be updated at once:
 lights_b.set_all_intensities(200)
 lights_b.set_all_on()
 ```
+
 Note that if an invalid value is passed to any of the class methods, a `ValueError` will be raised. Additionally, the channel number passed to the controller object corresponds directly to the channel number on the physical light controller. Therefore, it is **NOT** zero-indexed; instead, it starts at 1 for the lowest channel.
 
 ### Speed Limitations
