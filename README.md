@@ -1,16 +1,22 @@
 # VST-Light
-A Python package for seamless control of network-compatible VLP light controllers from VS Technology.
+*VST-Light* is a Python package designed to facilitate seamless control of network-compatible VLP light controllers from VS Technology. By abstracting the proprietary communication protocols, *VST-Light* provides a straightforward and user-friendly interface, enabling users to easily manage their VLP lighting systems without needing to understand the underlying technical complexities. In order to best utilize the module, it is recommended to read through the [User Guide](#user-guide) before use. Additionally, the [example](#example) of the module in use should also be checked.
 
+### Compatibility
+The following light controllers from VS Technology are supported:
+- VLP-2430-2eN
+- VLP-2430-3eN
+- VLP-2430-4eN
+- VLP-2460-4eN
 
 ## Installation
-VST-Light is available on PyPi and is therefore easily installed using pip:
+VST-Light is available on PyPI and can be easily installed using pip:
 ```zsh
 pip install VST-Light
 ```
 
-## How to Use
+## User Guide
 ### Initialization
-To use the module in your project, simply import the `VSTLight` module into your code, and create an instance of the `NetworkController` class, specifying the number of channels available on the connected light controller, and possibly the IP of the light controller, if it has been changed from the default `192.168.11.20`:
+To use the module in your project, simply import the `VSTLight` module into your code and create an instance of the `NetworkController` class, specifying the number of channels available on the connected light controller. If the IP of the light controller has been changed from the default `192.168.11.20`, you will need to specify the new IP address as well.
 ```python
 import VSTLight
 
@@ -18,10 +24,10 @@ lights_a = VSTLight.NetworkController(4)                    # Default IP
 lights_b = VSTLight.NetworkController(4, "192.168.11.128")  # Updated IP
 ```
 
-At the time of creation, the NetworkController object will open a connection to the physical light controller, if this fails a `ConnectionError` will be raised. Therefore it is required to connect the light controller and turn it on, before running any of the code relying on the `NetworkController` object. When connecting a light controller it is required to update the IP of the ethernet adapter used to make the connection, to be on the same subnet as the controlelr. The VLP controllers are hardcoded to reply to the IP `192.168.11.1`, and it is therefore revommended to update the ethernet adapter to this specific IP, but any IP on the `192.168.11.XXX` subnet will work, as long it is not occupied by another device.  
-The network connection has a timeout of 5 seconds, the call to create the `NetworkController` object is therefore blocking untill a connection has been established or the time has passed.
+At the time of creation, the `NetworkController` object will open a connection to the physical light controller. If this fails, a `ConnectionError` will be raised. Therefore, it is necessary to connect the light controller and turn it on before running any code that relies on the `NetworkController` object. When connecting a light controller, it is required to update the IP of the Ethernet adapter used to make the connection to be on the same subnet as the controller. The VLP controllers are hardcoded to reply to the IP `192.168.11.1`, so it is recommended to update the Ethernet adapter to this specific IP. However, any IP on the `192.168.11.XXX` subnet will work as long as it is not occupied by another device.  
+The network connection has a timeout of 5 seconds, so the call to create the `NetworkController` object is blocking until a connection is established or the timeout period elapses.
 
-Please refer to the documentation of the connected VLP light controller for more information on how it operates and what the different modes mean.
+Please refer to the documentation of the connected VLP light controller for more information on its operation and the meanings of the different modes.
 
 ### Updating the Channels
 Having crated an instance of the `NetworkController` class, the intensity and state of a single channel can be updated:
@@ -34,12 +40,12 @@ Alternatively all channels can be updated at once:
 lights_b.set_all_intensities(200)
 lights_b.set_all_on()
 ```
-Note that if an invalid value is passed to any of the class methods, a `ValueError` will be raised. Additionally the channel number passed to the controller object is derived from the channel number on the physical light controller. It is therefore NOT zero indexed, but rather starts at 1 for the lowest channel.
+Note that if an invalid value is passed to any of the class methods, a `ValueError` will be raised. Additionally, the channel number passed to the controller object corresponds directly to the channel number on the physical light controller. Therefore, it is **NOT** zero-indexed; instead, it starts at 1 for the lowest channel.
 
 ### Speed Limitations
-The VLP controllers are physically limited in how quickly they can recieve new commands. Each command must be spaced out by at least 5 ms, in order to be interpreted correctly. To overcome this, the `VSTLight` module keeps track of the time since the last command. If the time is less than 5 ms, the program will sleep untill 5 ms has passed since the last command was sent. Therefore any method call on a `NetworkController` object, has the potential to be blocking, if performed within 5 ms of another call.
+The VLP controllers are physically limited in how quickly they can receive new commands. Each command must be spaced out by at least 5 ms to be interpreted correctly. To accommodate this, the `VSTLight` module tracks the time since the last command. If the time is less than 5 ms, the program will sleep until 5 ms have passed since the last command was sent. Therefore, any method call on a `NetworkController` object has the potential to be blocking if performed within 5 ms of another call.
 
-If this is undesireable for your usecase, consider running the `NetworkController` in a separate thread, so as to not block your main thread at any point.
+If this behavior is undesirable for your use case, consider running the `NetworkController` in a separate thread to prevent blocking your main thread at any point.
 
 ### Example
 Below is an example program that turns a light connected to channel 1, on and off 1000 times:
